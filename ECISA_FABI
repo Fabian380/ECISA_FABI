@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECISA FABI - Detección de Plagio</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        h1 { text-align: center; }
+        .container { width: 80%; margin: 0 auto; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .section { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenido a ECISA FABI</h1>
+
+        <!-- Formulario de Ingreso -->
+        <div class="section" id="loginForm">
+            <h3>Iniciar Sesión</h3>
+            <input type="text" id="username" placeholder="Usuario" required><br>
+            <input type="password" id="password" placeholder="Contraseña" required><br>
+            <button onclick="login()">Iniciar Sesión</button>
+        </div>
+
+        <!-- Sección de Pruebas Gratuitas -->
+        <div class="section" id="freeTestsSection" style="display:none;">
+            <h3>Pruebas Gratuitas</h3>
+            <p>¡Tienes 2 pruebas gratuitas! Después de estas, tendrás que realizar un pago para continuar.</p>
+            <button onclick="startTest()">Comenzar Prueba</button>
+        </div>
+
+        <!-- Sección de Pago -->
+        <div class="section" id="paymentSection" style="display:none;">
+            <h3>Pago Requerido</h3>
+            <p>El costo de cada prueba adicional es de $700.000 COP.</p>
+            <button onclick="redirectToPayment()">Realizar Pago</button>
+        </div>
+
+        <!-- Modal de Idiomas -->
+        <div id="languageModal" style="display:none;">
+            <h3>Seleccionar Idioma</h3>
+            <button onclick="changeLanguage('es')">Español</button>
+            <button onclick="changeLanguage('en')">English</button>
+            <button onclick="changeLanguage('fr')">Français</button>
+            <!-- Puedes agregar más botones para otros idiomas -->
+        </div>
+    </div>
+
+    <script>
+        const FREE_ACCOUNT = "fagarzonle";
+        const FREE_PASSWORD = "FabiECISAlud20.24.-@";
+        const MAX_FREE_TESTS = 2;
+        let remainingFreeTests = MAX_FREE_TESTS;
+        
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            
+            if (username === FREE_ACCOUNT && password === FREE_PASSWORD) {
+                sessionStorage.setItem("accountType", "free");
+                showFreeTestsSection();
+            } else {
+                alert("Credenciales incorrectas.");
+            }
+        }
+
+        function showFreeTestsSection() {
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("freeTestsSection").style.display = "block";
+        }
+
+        function startTest() {
+            if (remainingFreeTests > 0) {
+                remainingFreeTests--;
+                alert("Iniciaste una prueba gratuita. Te quedan " + remainingFreeTests + " pruebas.");
+                if (remainingFreeTests === 0) {
+                    showPaymentSection();
+                }
+            } else {
+                showPaymentSection();
+            }
+        }
+
+        function showPaymentSection() {
+            document.getElementById("freeTestsSection").style.display = "none";
+            document.getElementById("paymentSection").style.display = "block";
+        }
+
+        function redirectToPayment() {
+            // Aquí va el redireccionamiento al sistema de pago (Nequi o PSE)
+            alert("Te redirigiremos al sistema de pago para completar la transacción.");
+            window.location.href = "https://pse.com.co"; // Redirección a PSE (ejemplo)
+        }
+
+        function changeLanguage(language) {
+            // Funcionalidad para cambiar el idioma (implementar traducción aquí)
+            if (language === 'es') {
+                document.title = "ECISA FABI - Detección de Plagio";
+                // Puedes agregar más traducciones para los elementos de la interfaz
+            } else if (language === 'en') {
+                document.title = "ECISA FABI - Plagiarism Detection";
+            } else if (language === 'fr') {
+                document.title = "ECISA FABI - Détection de Plagiat";
+            }
+            document.getElementById("languageModal").style.display = "none";  // Cerrar modal de idioma
+        }
+    </script>
+</body>
+</html>
+
+// Función para procesar el pago
+function processPayment(user, amount) {
+  const paymentStatus = initiateNequiPayment(user, amount);  // Llamada a un sistema de pago simulado
+  if (paymentStatus === "success") {
+    recordPayment(user, amount);
+    return "Pago procesado con éxito.";
+  } else {
+    return "Error en el procesamiento del pago.";
+  }
+}
+
+// Simulación de un pago con Nequi
+function initiateNequiPayment(user, amount) {
+  // Aquí iría la integración con un servicio de pago real, como PSE
+  // Simulamos que el pago fue exitoso
+  return "success";
+}
+
+// Registro de pago
+function recordPayment(user, amount) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Pagos"); // Verifica que "Pagos" es el nombre correcto
+  if (!sheet) {
+    throw new Error("La hoja 'Pagos' no existe en la hoja de cálculo.");
+  }
+  sheet.appendRow([user, amount, new Date()]);
+}
+
+// Función para verificar si el usuario tiene acceso a más pruebas gratuitas
+function checkUserTests(user) {
+  const freeTests = getFreeTests(user);
+  if (freeTests > 0) {
+    return "Tienes pruebas gratuitas disponibles.";
+  } else {
+    return "Necesitas realizar un pago para continuar.";
+  }
+}
+
+// Obtener las pruebas restantes para el usuario
+function getFreeTests(user) {
+  const freeTestsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Usuarios"); // Verifica que "Usuarios" es el nombre correcto
+  if (!freeTestsSheet) {
+    throw new Error("La hoja 'Usuarios' no existe en la hoja de cálculo.");
+  }
+  
+  const usersData = freeTestsSheet.getDataRange().getValues();
+  for (let i = 0; i < usersData.length; i++) {
+    if (usersData[i][0] === user) {
+      return usersData[i][1];  // Devuelve el número de pruebas gratuitas restantes
+    }
+  }
+  return 0;  // Usuario no encontrado
+}
+
+// Función para manejar la creación de una cuenta premium (cuando corresponda)
+function createPremiumAccount(user) {
+  const freeTestsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Usuarios"); // Verifica que "Usuarios" es el nombre correcto
+  if (!freeTestsSheet) {
+    throw new Error("La hoja 'Usuarios' no existe en la hoja de cálculo.");
+  }
+  freeTestsSheet.appendRow([user, 2]);  // Por ejemplo, asignar 2 pruebas gratuitas a cada nuevo usuario
+}
